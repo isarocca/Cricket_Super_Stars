@@ -16,7 +16,9 @@ class Renderizador:
         self.puntos = pygame.image.load(str(RUTA_FONDOS / "puntos.png")).convert_alpha()
         self.gradas = pygame.image.load(str(RUTA_FONDOS / "gradas.png")).convert_alpha()
         self.tiempo = pygame.image.load(str(RUTA_FONDOS / "tiempo.png")).convert_alpha()
-        
+        self.guia = cargar_fondo("guia.png")
+        self.guia.set_colorkey(BLANCO)
+
         # Capas de Strikes
         self.strike3 = pygame.image.load(str(RUTA_FONDOS / "1.png")).convert_alpha()
         self.strike2 = pygame.image.load(str(RUTA_FONDOS / "2.png")).convert_alpha()
@@ -28,10 +30,15 @@ class Renderizador:
         self.strike_3 = pygame.image.load(str(RUTA_FONDOS / "strike_3.png")).convert_alpha()
 
         # Fuentes
-        self.fuente_txt = pygame.font.SysFont("arial", 30)
         self.fuente_vol = pygame.font.SysFont("arial", 30, bold=True)
         self.fuente_juego = pygame.font.SysFont("arial", 30, bold=True)
-        self.fuente_aviso = pygame.font.SysFont("arial", 45, bold=True)
+        archivo_fuente = next(RUTA_FUENTES.glob("Golden Age.ttf"), None)
+        if archivo_fuente:
+            self.fuente_tiro = pygame.font.Font(str(archivo_fuente), 50)
+            self.fuente_txt = pygame.font.Font(str(archivo_fuente), 25)
+        else:
+            self.fuente_tiro = pygame.font.SysFont("arial", 45, bold=True)
+            self.fuente_txt = pygame.font.SysFont("arial", 25)
 
     def dibujar_menu(self, pantalla, menu):
         pantalla.blit(menu.fondo, (0, 0)) 
@@ -53,7 +60,7 @@ class Renderizador:
         pantalla.blit(estado_dificultad.fondo, (0, 0))
         txt_titulo = estado_dificultad.seleccionar.render("SELECCIONA LA DIFICULTAD", True, NEGRO)
         pantalla.blit(txt_titulo, (ANCHO // 2 - txt_titulo.get_width() // 2, 60))
-    
+
         texto_botones = [
             estado_dificultad.obtener_dificultades("FACIL"),
             estado_dificultad.obtener_dificultades("MEDIO"),
@@ -99,6 +106,7 @@ class Renderizador:
         pygame.draw.rect(pantalla, (255, 0, 0), juego.bateador.hitbox, 2)
 
         # 5. Capa superior de strikes y HUD
+        pantalla.blit(self.guia, (0, 0))
         if juego.vidas == 3:
             pantalla.blit(self.sinstrike, (20, 140))
         elif juego.vidas == 2:
@@ -119,7 +127,7 @@ class Renderizador:
         pantalla.blit(txt_tiempo, (ANCHO - 130, 100))
         
         if juego.ultimo_tiro_texto:
-            txt_aviso = self.fuente_aviso.render(juego.ultimo_tiro_texto, True, juego.color_texto_tiro)
+            txt_aviso = self.fuente_tiro.render(juego.ultimo_tiro_texto, True, juego.color_texto_tiro)
             pantalla.blit(txt_aviso, (ANCHO//2 - txt_aviso.get_width()//2, ALTO//2 + 50))
 
     def dibujar_resultado(self, pantalla, resultado):

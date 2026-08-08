@@ -11,7 +11,7 @@ AMARILLO_BATEO = (255, 215, 0)
 ROJO_BOLA = (220, 20, 60)
 
 DIFICULTADES = {
-    "FACIL":   {"dificultad": "FACIL","puntos_meta": 50,  "tiempo": None, "vel_pelota": 6,  "efecto": False},
-    "MEDIO":   {"dificultad": "MEDIO","puntos_meta": 20, "tiempo": 60,   "vel_pelota": 8,  "efecto": True},
-    "DIFICIL": {"dificultad": "DIFICIL","puntos_meta": 150, "tiempo": 30,   "vel_pelota": 12, "efecto": True}
+    "FACIL":   {"dificultad": "FACIL","puntos_meta": 20,  "tiempo": None, "vel_pelota": 6,  "efecto": False},
+    "MEDIO":   {"dificultad": "MEDIO","puntos_meta": 50, "tiempo": 90,   "vel_pelota": 8,  "efecto": True},
+    "DIFICIL": {"dificultad": "DIFICIL","puntos_meta": 70, "tiempo": 30,   "vel_pelota": 12, "efecto": True}
 }

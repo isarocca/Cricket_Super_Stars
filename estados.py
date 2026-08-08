@@ -1,6 +1,6 @@
 import pygame
 from pathlib import Path
-from config import ANCHO, ALTO, NEGRO, BLANCO, AMARILLO_BATEO, ROJO_BOLA, DIFICULTADES
+from config import ANCHO, ALTO, NEGRO, BLANCO, AMARILLO_BATEO, ROJO_BOLA, VERDE_PASTO , DIFICULTADES
 from entidades import Bateador, Bola, Lanzador
 from render import Renderizador, cargar_fondo
 
@@ -20,13 +20,13 @@ class Boton:
         
         archivo_fuente = next(RUTA_FUENTES.glob("Nowster Cute.otf"), None)
         self.fuente_datos = pygame.font.SysFont("arial black", 35, bold=True)
-        
+
     def chequear_clic(self, pos_raton):
         return self.rect.collidepoint(pos_raton)
 
     def dibujar(self, pantalla, borde_activo=False, lineas_texto=None):  
         pantalla.blit(self.imagen, self.rect.topleft)
-        
+
         if borde_activo:
             rect_borde = self.rect.inflate(12, 12)
             pygame.draw.rect(pantalla, (255, 255, 255), rect_borde, width=4, border_radius=12)
@@ -50,6 +50,8 @@ class PantallaMenu:
         pygame.mixer.music.set_volume(self.volumen)
         self.snd_seleccion = pygame.mixer.Sound(str(RUTA_SONIDOS / "click.mp3"))
         self.snd_seleccion.set_volume(self.volumen)
+
+
         
         imagen_logo = pygame.image.load(str(RUTA_FONDOS / "logo.png")).convert_alpha()
         self.logo = pygame.transform.scale(imagen_logo, (500, 400))
@@ -113,8 +115,11 @@ class PantallaDificultad:
         
         try:
             self.snd_seleccion = pygame.mixer.Sound(str(RUTA_SONIDOS / "click.mp3"))
+            self.snd_preseleccion = pygame.mixer.Sound(str(RUTA_SONIDOS / "preseleccion.mp3"))
+            self.snd_preseleccion.set_volume(0.7)
         except pygame.error:
             self.snd_seleccion = None
+            self.snd_preseleccion = None
 
         archivo_fuente = next(RUTA_FUENTES.glob("Golden Age.ttf"), None)
         if archivo_fuente:
@@ -135,10 +140,12 @@ class PantallaDificultad:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_DOWN:
                     self.indice_seleccionado = (self.indice_seleccionado + 1) % 3
-
+                    if getattr(self, 'snd_preseleccion', None):
+                        self.snd_preseleccion.play()
                 elif event.key == pygame.K_UP:
                     self.indice_seleccionado = (self.indice_seleccionado - 1) % 3
-
+                    if getattr(self, 'snd_preseleccion', None):
+                        self.snd_preseleccion.play()
                 elif event.key == pygame.K_RETURN:
                     if self.snd_seleccion:
                         self.snd_seleccion.play()
@@ -179,8 +186,15 @@ class PantallaJuego:
         if self.tiempo_restante is not None:
             pygame.time.set_timer(pygame.USEREVENT + 1, 1000)
 
+        self.snd_strike = pygame.mixer.Sound(str(RUTA_SONIDOS / "strike.mp3"))
+        self.snd_strike.set_volume(0.6)
+        self.snd_swing = pygame.mixer.Sound(str(RUTA_SONIDOS / "swing.mp3"))
+        self.snd_swing.set_volume(0.6)
+        self.snd_hit = pygame.mixer.Sound(str(RUTA_SONIDOS / "hit.mp3"))
+        self.snd_hit.set_volume(0.6)
+
         self.snd_lanzamiento = pygame.mixer.Sound(str(RUTA_SONIDOS / "bola.mp3"))
-        self.snd_publico = pygame.mixer.Sound(str(RUTA_SONIDOS / "publico.mp3"))
+        self.snd_publico = pygame.mixer.Sound(str(RUTA_SONIDOS / "publico.wav"))
         self.snd_lanzamiento.set_volume(0.6)
         
         self.esperando_fin_juego = False
@@ -199,8 +213,10 @@ class PantallaJuego:
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
                 if self.bola.activa and not self.bola.bateada:
                     self.bateador.batear()
+                    self.snd_swing.play()
                     if self.bateador.hitbox.colliderect(self.bola.rect):
                         self.bola.recubrir_batazo(self.bateador.hitbox.centerx)
+                        self.snd_hit.play()
 
     def actualizar(self):
         if self.esperando_fin_juego:
@@ -230,11 +246,15 @@ class PantallaJuego:
         if resultado_bola == "FALLO":
             self.vidas -= 1
             if self.vidas > 0:
-                self.ultimo_tiro_texto = "¡STRIKE!"
+                if self.snd_strike:
+                    self.snd_strike.play()
+                self.ultimo_tiro_texto = "STRIKE!"
                 self.color_texto_tiro = ROJO_BOLA
                 self.activar_espera(90)
             else:
-                self.ultimo_tiro_texto = "¡TERCER STRIKE! ¡OUT!"
+                if self.snd_strike:
+                    self.snd_strike.play()
+                self.ultimo_tiro_texto = "TERCER STRIKE, OUT!"
                 self.color_texto_tiro = ROJO_BOLA
                 self.esperando_fin_juego = True  
 
@@ -252,17 +272,17 @@ class PantallaJuego:
 
             if (x_izq_azul <= bx <= x_der_azul) and (by >= y_superior_azul):
                 self.puntuacion += 2
-                self.ultimo_tiro_texto = "¡Hit Corto! +2 Puntos"
-                self.color_texto_tiro = BLANCO
+                self.ultimo_tiro_texto = "Hit Corto! +2 Puntos"
+                self.color_texto_tiro = VERDE_PASTO
                 
             elif (x_izq_amarilla <= bx <= x_der_amarilla) and (by >= y_superior_amarilla):
                 self.puntuacion += 5
-                self.ultimo_tiro_texto = "¡Batazo Profundo! +5 Puntos"
-                self.color_texto_tiro = BLANCO
+                self.ultimo_tiro_texto = "Batazo Profundo! +5 Puntos"
+                self.color_texto_tiro = VERDE_PASTO
            
             else:
                 self.puntuacion += 10
-                self.ultimo_tiro_texto = "¡HOME RUN! +10 Puntos"
+                self.ultimo_tiro_texto = "HOME RUN! +10 Puntos"
                 if self.snd_publico:
                     self.snd_publico.play()
                 self.color_texto_tiro = AMARILLO_BATEO
@@ -289,7 +309,7 @@ class PantallaJuego:
 class PantallaResultado:
     def __init__(self, resultado):
         self.resultado = resultado
-        self.fondo = cargar_fondo("victoria.png" if self.resultado == "GANASTE" else "derrota.png")
+        self.fondo = cargar_fondo("victoria.jpg" if self.resultado == "GANASTE" else "derrota.jpg")
         
         self.snd_victoria = pygame.mixer.Sound(str(RUTA_SONIDOS / "victoria.mp3"))
         self.snd_derrota = pygame.mixer.Sound(str(RUTA_SONIDOS / "derrota.mp3"))
